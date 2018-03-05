@@ -44,9 +44,7 @@ while player1:
     elif maincommand == 'inven':
         Player.view_inventory(player1)
     elif maincommand == 'use':
-        Player.use_item(player1)
-    elif maincommand == 'equip':
-        Player.equip_item(player1)
+        useItem(player1)
     elif maincommand == 'explore':
         x = random.randint(1, 1)
         if x == 1:

@@ -3,27 +3,52 @@ from playerClass import *
 
 
 class AI(Character):
-    def update(self, opponent):
+    def update(self):
         """ Similar to Player.update(). """
-        if self.currenthp <= 0:  # Checks to see if the enemy is dead.
-            self.death(opponent)
-        if self.currenthp <= 5:
-            self.flee(opponent)
-
-    def death(self, opponent):
+        if self.currenthp < 1:  # Checks to see if the enemy is dead.
+            self.death()
+    def death(self):
         combatenemy.remove(self)  # Removes the enemy from the combatenemy list.
-        self.currenthp = self.maxhp  # Brings the enemy object back up to full hp so it can be used later.
-        opponent.currentexp += self.level  # Gives the player exp.
-        opponent.gold += self.gold  # Gives the player gold.
-        print('\n**** You have defeated {0}! You gain {1} experience and {2} gold! ***\n'
-              .format(self.name, self.level, self.gold))
 
 
-class Beast(AI):
+class Humanoid(AI):
+    def __init__(self):
+        super(Humanoid, self).__init__()
+        self.name = "Peasant"
+        self.maxhp = 15
+        self.currenthp = self.maxhp
+        self.maxmana = 10
+        self.luck = 5
+        self.strength = 2
+        self.add_item(healthPotion())
+    def update(self):
+        if(self.currenthp < self.maxhp - 1):
+            x = -1
+            for i in self.inventory:
+                x += 1
+                if i.type == "potion":
+                    if self.currenthp - i.points >= i.points:
+                        self.inventory[x].use(self)
+                    print("{0} used a {1}!".format(self.name, i.name))
+
+
+
+class Bandit(Humanoid):
+    def __init__(self):
+        super(Bandit, self).__init__()
+        self.strength = 2
+        self.name = "Peasant"
+        self.maxhp = 15
+        self.add_item(leatherHat())
+        self.add_item(leatherChest())
+        self.add_item(leatherPants())
+
+
+class Animal(AI):
     def attack(self, enemy):
         if self.currenthp > 0:
             combatroll = random.randint(1, 100)
-            damage = int(self.atk/2)
+            damage = int(self.strength/2)
             if combatroll < 80:
                 print(str('&&& {0} attacked {1} for {2} points of damage with his right paw! &&&'
                           .format(self.name, enemy.name, damage)))
@@ -43,31 +68,29 @@ class Beast(AI):
             print("========================================")
             print("{0}: {1}/{2}".format(enemy.name, enemy.currenthp, enemy.maxhp))
             print("========================================")
+
+class Rat(Animal):
+    def __init__(self):
+        super(Rat, self).__init__()
+        self.hasAI = True
+        self.name = "Giant Rat"
+        self.maxhp = 10
+        self.currenthp = self.maxhp
+        self.maxmana = 10
+        self.luck = 1
+        self.strength = 4
 #
 #
 # Creating enemies
 #
 #
-
-
-enemy_rat = Beast([-1, 'Giant Rat', 15, 0, 2, 10, 2])
-enemy_ghoul = AI([-1, 'Ghoul', 9, 2, 1, 15, 3])
-enemy_livingmushroom = AI([-1, 'Living Mushroom', 5, 4, 5, 20, 2])
-enemy_beast = Beast([-1, "Humanoid Beast", 15, 5, 2, random.randint(15, 25), 4])
-enemy_zombie = AI([-1, "Zombified Peasant", 50, 0, 0, random.randint(15, 25), 1])
-enemy_wolf = Beast([-1, "Direwolf", 8, 5, 5, 5, 8])
-
-
-# Identifier, name, maxHP, maxMana, luck, gold, strength
+#
 #
 #
 # Adding enemies to tier lists
 #
 #
-tier1enemy = (enemy_rat,
-              enemy_ghoul,
-              enemy_livingmushroom)
-tier2enemy = (enemy_beast,
-              enemy_zombie,
-              enemy_wolf)
+tier1enemy = (Humanoid(),Humanoid())
+
+tier2enemy = (Bandit())
 tier1gold = random.randint(10, 20)

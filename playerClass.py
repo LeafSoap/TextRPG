@@ -13,28 +13,31 @@ combatenemy = []
 
 class Character:
     """ Class used to track the player."""
-    def __init__(self, creation):
+    def __init__(self):
         """ Constructs an object using the stats from character_creation()"""
         # Attributes from character creation:
         # Each player object will have their own unique 'identifier' attribute. This identifier will be 1 for Player 1,
         # 2 for Player 2, etc. This will allow easier multi-player support.
-        self.identifier = creation[0]
-        self.name = creation[1]
-        self.maxhp = creation[2]
-        self.maxmana = creation[3]
-        self.luck = creation[4]
+        self.identifier = 0
+        self.name = "NULL"
+        self.maxhp = 5
+        self.maxmana = 0
+        self.luck = 0
         # Attributes generated using the ones above:
         self.currenthp = self.maxhp
         self.currentmana = self.maxmana
         # Experience/Level attributes:
         self.level = self.maxhp + self.maxmana + self.luck - 24
-        self.neededexp = 15
+        self.neededexp = 0
         self.currentexp = 0
         # Inventory/Gold attributes:
         self.inventory = []
+        weaponPower = 0
         self.gold = 0
+        self.hasAI = False
         # Entity's attack and armor values:
-        self.atk = 0
+        self.basePower = 1
+        self.atk = self.basePower
         self.armor = 0
         # Entity's equipment:
         # The list will have 4 objects.
@@ -42,10 +45,9 @@ class Character:
         # 1 - Chest
         # 2 - Legs
         # 3 - Weapon
-        self.equipment = [item_null,  # Filling the Entity's equipment slots with
-                          item_null,  # an 'empty' item, known as item_null.
-                          item_null,
-                          item_null]
+        self.equipment = [leatherPants(),  # Filling the Entity's equipment slots with
+                          leatherChest(),  # an 'empty' item, known as item_null.
+                          leatherHat()]
 
     def view_stats(self):
         print('==========')
@@ -60,7 +62,16 @@ class Character:
         print('==========')
 
     def update(self):
+        #if we have armor and weapons, apply their attributes
+        self.armor = 1
+        self.atk = self.basePower
+        for i in self.equipment:
+            if i.type == "armor":
+                self.armor += i.armorValue
+            if i.type == "weapon":
+                self.atk += i.power
         """ Method used to check and player_update player status."""
+        #Death checks and overflow checks that will be universal
         if self.currentexp >= self.neededexp:  # Check to see if player has enough exp to level up.
             self.lvlup()
         if self.currenthp <= 0:  # Check to see if player is dead.
@@ -99,66 +110,31 @@ class Character:
 
     def view_inventory(self):
         """ Views the player's gold and inventory. """
-        x = -1
-        head = self.equipment[0]
-        chest = self.equipment[1]
-        legs = self.equipment[2]
-        weapon = self.equipment[3]
         print('==============================')
-        print('Head:   {0} --- {1} Armor'.format(head.name, head.points))
-        print('Chest:  {0} --- {1} Armor'.format(chest.name, chest.points))
-        print('Legs:   {0} --- {1} Armor'.format(legs.name, legs.points))
-        print('Weapon: {0} --- {1} Attack'.format(weapon.name, weapon.points))
+        for i in self.inventory:
+            if i.type == "head":
+                head = self.equipment[i]
+                print('Head:   {0} --- {1} Armor'.format(head.name, head.armorValue))
+            elif i.type == "chest":
+                chest = self.equipment[i]
+                print('Chest:  {0} --- {1} Armor'.format(chest.name, chest.armorValue))
+            elif i.type == "legs":
+                legs = self.equipment[i]
+                print('Legs:   {0} --- {1} Armor'.format(legs.name, legs.armorValue))
+        #print('Weapon: {0} --- {1} Attack')#.format(weapon.name, weapon.power)
         print('\n$$$$$ Gold: {0} $$$$$\n'.format(self.gold))
         if self.inventory:
+            x = -1
             for i in self.inventory:
                 x += 1
-                print('( ' + str(x) + ' ) ' + i.name + ' - ' + i.description())
+                print('( ' + str(x) + ' ) ' + i.name)
         else:
             print('\nYour inventory is empty! :(')
         print('==============================')
 
-    def use_item(self):
+    def use_item(self,item):
         """ Views the inventory, and then asks the player what item they would like to use. """
-        self.view_inventory()
-        x = len(self.inventory)
-        while self.inventory:
-            try:
-                useitem = abs(int(input("\nWhat do you use? (# for item, anything else to go back.)\n")))
-                if useitem <= x and self.inventory[useitem].itemtype != 'equip':  # Trying to use equipment?
-                    self.inventory[useitem].use(self)  # No? Good.
-                    break
-                elif useitem <= x and self.inventory[useitem].itemtype == 'equip':  # Trying to use equipment?
-                    print("\nYou can't use equipment! Try 'equip' command.")  # Yes? You can't do that!
-                elif useitem > x:
-                    print('\nInvalid item number.')
-            except ValueError:
-                break
-        else:
-            print('==============================')
-            print('Your inventory is empty! :(')
-            print('==============================')
-
-    def equip_item(self):
-        """ Views the inventory, and then asks the player what item they would like to equip. """
-        self.view_inventory()
-        x = len(self.inventory)
-        while self.inventory:
-            try:
-                useitem = abs(int(input("\nWhat do you equip? (# for item, anything else to go back.)\n")))
-                if useitem <= x and self.inventory[useitem].itemtype == 'equip':  # Trying to equip consumable?
-                    self.inventory[useitem].use(self)  # No? Good.
-                    break
-                elif useitem <= x and self.inventory[useitem].itemtype != 'equip':  # Trying equip consumable?
-                    print("\nYou can't equip that! Try 'use' command.")  # Yes? You can't do that!
-                elif useitem > x:
-                    print('\nInvalid item number.')
-            except ValueError:
-                break
-        else:
-            print('==============================')
-            print('Your inventory is empty! :(')
-            print('==============================')
+        self.inventory[item].use()
 
     def add_item(self, item):
         """ Adds an item to the inventory. """
@@ -170,10 +146,16 @@ class Character:
         # Combat methods
         #
         #
-
+    def hurt(self,damage):
+        armor = self.armor/10
+        self.update()
+        if(self.armor > 3):
+            self.currenthp -= damage*armor
+        else:
+            self.currenthp -= damage
     def attack(self, enemy):
         if self.currenthp > 0:
-            enemy.currenthp -= self.atk
+            enemy.hurt(self.atk)
             if enemy.currenthp < 0:
                 enemy.currenthp = 0
             print(str('&&& {0} attacked {1} for {2} points of damage! &&&'
@@ -196,12 +178,39 @@ class Character:
 
 
 class Player(Character):
+    def __init__(self,creation):
+        super(Player, self).__init__()
+        # Each player object will have their own unique 'identifier' attribute. This identifier will be 1 for Player 1,
+            # 2 for Player 2, etc. This will allow easier multi-player support.
+
+        self.identifier = creation[0]
+        self.name = creation[1]
+        self.maxhp = creation[2]
+        self.maxmana = creation[3]
+        self.luck = creation[4]
+        # Attributes from character creation:
+        # Attributes generated using the ones above:
+        self.currenthp = self.maxhp
+        self.currentmana = self.maxmana
+        self.level = self.maxhp + self.maxmana + self.luck - 24
+        self.neededexp = 15
+        self.currentexp = 0
+        self.inventory = []
+        self.gold = 0
+        self.type = "NULL"
+        self.atk = 1
+        self.armor = 0
+
     def death(self):
         """ Method used if player_update() detects that the player's HP has reached 0. """
         points = self.level
         print('\n\n,_,_,_You have died._,_,_,\n'
               'Points: {0}'.format(points))
         sys.exit()
+
+    def add_item(self, item):
+        self.inventory.append(item)
+        print('--You acquired {0}!--\n'.format(item.name))
     pass
 #
 #
@@ -258,20 +267,23 @@ player1 = Player(character_creation())
 
 
 # Give the player a potion.
-player1.add_item(potion_lesser_healing_potion)
-
+player1.add_item(medHealth())
+player1.add_item(steelPants())
+player1.add_item(healthPotion())
+player1.add_item(woodSword())
+player1.add_item(steelSword())
 
 # Giving the player a starter weapon.
-player1.add_item(equip_broken_straight_sword)
+#player1.add_item(equip_broken_straight_sword)
 
 
 # Equipping the player with the starter weapon.
-Item.use(equip_broken_straight_sword, player1)
+#Item.use(equip_broken_straight_sword, player1)
 
 
 # TESTING TESTING TESTING
 # Giving the player some gear for testing purposes. Play around with these and then remove them as needed.
-player1.add_item(equip_silver_blade)
-player1.add_item(equip_steel_helmet)
-player1.add_item(potion_greater_rejuv_potion)
-player1.add_item(equip_silver_chest)
+#player1.add_item(equip_silver_blade)
+#player1.add_item(equip_steel_helmet)
+#player1.add_item(potion_greater_rejuv_potion)
+#player1.add_item(equip_silver_chest)
