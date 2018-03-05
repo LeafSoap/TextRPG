@@ -17,6 +17,7 @@ main_commands = {
     'stats': 'View your current stats.',
     'inven': 'View your current inventory and gold.',
     'use': 'Use an item in your inventory.',
+    'equip': 'Equip an item in your inventory.',
     'explore': 'Travel to a new place.'
 }
 
@@ -44,6 +45,8 @@ while player1:
         Player.view_inventory(player1)
     elif maincommand == 'use':
         Player.use_item(player1)
+    elif maincommand == 'equip':
+        Player.equip_item(player1)
     elif maincommand == 'explore':
         x = random.randint(1, 1)
         if x == 1:
