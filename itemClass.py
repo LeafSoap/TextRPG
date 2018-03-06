@@ -17,15 +17,16 @@ class healthPotion():
         self.price = 15
         self.uses = 3
         self.description = "{0} restores {1} health.".format(self.name, self.points)
+
     def use(self,user):
         user.currenthp += self.points
         print("{0} used a {1}, healing {2} points".format(user.name, self.name, self.points))
         self.uses -= 1
-        if(self.uses > 0):
+        if self.uses > 0:
             print("{0} uses left".format(self.uses))
-        if(self.uses <= 0):
+        if self.uses <= 0:
             user.inventory.remove(self)
-            print("{0} drained the last bit of {0} and leave the flask on the ground.".format(user.name, self.name))
+            print("{0} drained the last bit of {1} and leave the flask on the ground.".format(user.name, self.name))
 
 
 class manaPotion():
@@ -56,7 +57,6 @@ class Equipable(Item):
         self.name = "A Null Item"
         self.slot = 0
         self.armorValue = 0
-
 
     def use(self,user):
         for i in user.equipment:
@@ -120,27 +120,5 @@ class steelSword(woodSword):
         self.power = 4
 
 
-def useItem(player):
-    """ Views the inventory, and then asks the player what item they would like to use. """
-    player.view_inventory()
-    x = len(player.inventory)
-    while player.inventory:
-        try:
-            useitem = abs(int(input("\nWhat do you use? (# for item, anything else to go back.)\n")))
-            if useitem <= x:
-                player.inventory[useitem].use(player)
-                player.view_inventory()
-            elif useitem > x:
-                print('\nInvalid item number.')
-        except ValueError:
-            break
-    else:
-        print('==============================')
-        print('Your inventory is empty! :(')
-        print('==============================')
-
-
-
-
 tier1potion = (healthPotion(), manaPotion())
-tier2potion = (medHealth,medHealth)
+tier2potion = (medHealth(), medHealth())

@@ -181,8 +181,7 @@ class Player(Character):
     def __init__(self,creation):
         super(Player, self).__init__()
         # Each player object will have their own unique 'identifier' attribute. This identifier will be 1 for Player 1,
-            # 2 for Player 2, etc. This will allow easier multi-player support.
-
+        # 2 for Player 2, etc. This will allow easier multi-player support.
         self.identifier = creation[0]
         self.name = creation[1]
         self.maxhp = creation[2]
@@ -200,6 +199,30 @@ class Player(Character):
         self.type = "NULL"
         self.atk = 1
         self.armor = 0
+        self.add_item(medHealth())
+        self.add_item(steelPants())
+        self.add_item(healthPotion())
+        self.add_item(woodSword())
+        self.add_item(steelSword())
+
+    def use_item(self):
+        """ Views the inventory, and then asks the player what item they would like to use. """
+        self.view_inventory()
+        x = len(self.inventory)
+        while self.inventory:
+            try:
+                useitem = abs(int(input("\nWhat do you use? (# for item, anything else to go back.)\n")))
+                if useitem <= x:
+                    self.inventory[useitem].use(self)
+                    self.view_inventory()
+                elif useitem > x:
+                    print('\nInvalid item number.')
+            except ValueError:
+                break
+        else:
+            print('==============================')
+            print('Your inventory is empty! :(')
+            print('==============================')
 
     def death(self):
         """ Method used if player_update() detects that the player's HP has reached 0. """
@@ -267,23 +290,8 @@ player1 = Player(character_creation())
 
 
 # Give the player a potion.
-player1.add_item(medHealth())
-player1.add_item(steelPants())
-player1.add_item(healthPotion())
-player1.add_item(woodSword())
-player1.add_item(steelSword())
 
-# Giving the player a starter weapon.
-#player1.add_item(equip_broken_straight_sword)
-
-
-# Equipping the player with the starter weapon.
-#Item.use(equip_broken_straight_sword, player1)
 
 
 # TESTING TESTING TESTING
 # Giving the player some gear for testing purposes. Play around with these and then remove them as needed.
-#player1.add_item(equip_silver_blade)
-#player1.add_item(equip_steel_helmet)
-#player1.add_item(potion_greater_rejuv_potion)
-#player1.add_item(equip_silver_chest)

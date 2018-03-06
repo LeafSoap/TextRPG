@@ -22,11 +22,9 @@ def combat(player):
     elif combatRoll <= 25:
         e = random.choice(tier2enemy)
     combatenemy.append(e)  # Add the random enemy to the combatenemy list.
-    player.update()  # Updates the player every loop
-    e.update()  # Updates the enemy every loop for good measure. May be useless.
     print('You have encountered a {0}!'.format(e.name))
     e.view_stats()
-    while combatenemy:
+    while len(combatenemy) > 0:
         combatcommand = input("\nYou are in combat! ('help' for commands)\n")
         if combatcommand == 'help':  # Help command
             for key in combat_commands:  # 'key' throws a weak warning. Ignore it for now. Works fine.
@@ -36,7 +34,7 @@ def combat(player):
         elif combatcommand == 'inven':  # ---Inventory command
             player.view_inventory()
         elif combatcommand == 'use':  # ---Use item command
-            useItem(player1)
+            player1.use_item()
             if combatenemy:  # If the enemy is still alive....
                 e.attack(player)  # The enemy attacks after the player uses an item.
         elif combatcommand == 'enemy':  # ---View enemy stats command

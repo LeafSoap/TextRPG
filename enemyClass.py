@@ -79,13 +79,7 @@ class Rat(Animal):
         self.maxmana = 10
         self.luck = 1
         self.strength = 4
-#
-#
-# Creating enemies
-#
-#
-#
-#
+
 #
 # Adding enemies to tier lists
 #
