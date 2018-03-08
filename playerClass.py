@@ -3,13 +3,13 @@ import random
 import time
 from enemyClass import *
 from itemClass import *
+from spellClass import *
 
 
 # Using a global variable to track the amount of players in the game.
 # This variable will be changed within the character_creation() function.
 number_of_players = 0
 combatenemy = []
-
 
 
 class Character:
@@ -28,29 +28,37 @@ class Character:
         self.currenthp = self.maxhp
         self.currentmana = self.maxmana
         # Experience/Level attributes:
-        self.level = self.maxhp + self.maxmana + self.luck
+        self.level = self.maxhp + self.maxmana + self.luck - 24
         self.neededexp = 15
         self.currentexp = 0
         # Inventory/Gold attributes:
         self.inventory = []
-        self.gold = creation[5]
-        # Player's attack value
-        self.atk = creation[6]
-        # The following attributes are currently unused.
-        # They will be used for armor pieces in the future.
-        # self.headslot = []
-        # self.chestslot = []
-        # self.legslot = []
-        # self.weaponslot = []
+        self.gold = 0
+        # Entity's attack and armor values:
+        self.atk = 0
+        self.armor = 0
+        # Entity's equipment:
+        # The list will have 4 objects.
+        # 0 - Head
+        # 1 - Chest
+        # 2 - Legs
+        # 3 - Weapon
+        self.equipment = [item_null,  # Filling the Entity's equipment slots with
+                          item_null,  # an 'empty' item, known as item_null.
+                          item_null,
+                          item_null]
+        self.spellbook = []  # Giving the player a spellbook
 
     def view_stats(self):
         print('==========')
-        print('Name: {0}'.format(self.name))
-        print('Level: {0}'.format(self.level))
-        print('Exp:  {0}/{1}'.format(self.currentexp, self.neededexp))
-        print('HP:   {0}/{1}'.format(self.currenthp, self.maxhp))
-        print('Mana: {0}/{1}'.format(self.currentmana, self.maxmana))
-        print('Luck: {0}'.format(self.luck))
+        print('Name:   {0}'.format(self.name))
+        print('Level:  {0}'.format(self.level))
+        print('Exp:    {0}/{1}'.format(self.currentexp, self.neededexp))
+        print('HP:     {0}/{1}'.format(self.currenthp, self.maxhp))
+        print('Mana:   {0}/{1}'.format(self.currentmana, self.maxmana))
+        print('Luck:   {0}'.format(self.luck))
+        print('Armor:  {0}'.format(self.armor))
+        print('Attack: {0}'.format(self.atk))
         print('==========')
 
     def update(self):
@@ -93,37 +101,92 @@ class Character:
 
     def view_inventory(self):
         """ Views the player's gold and inventory. """
-        print('==============================')
-        print('$$$ Gold: {0} $$$'.format(self.gold))
         x = -1
+        head = self.equipment[0]
+        chest = self.equipment[1]
+        legs = self.equipment[2]
+        weapon = self.equipment[3]
+        print('==============================')
+        print('Head:   {0} --- {1} Armor'.format(head.name, head.value))
+        print('Chest:  {0} --- {1} Armor'.format(chest.name, chest.value))
+        print('Legs:   {0} --- {1} Armor'.format(legs.name, legs.value))
+        print('Weapon: {0} --- {1} Attack'.format(weapon.name, weapon.value))
+        print('\n$$$$$ Gold: {0} $$$$$\n'.format(self.gold))
         if self.inventory:
             for i in self.inventory:
                 x += 1
-                print('\n( ' + str(x) + ' ) ' + i.name + ' - ' + i.description())
+                print('( ' + str(x) + ' ) ' + i.name + ' - ' + i.description())
         else:
             print('\nYour inventory is empty! :(')
         print('==============================')
 
+    def view_spellbook(self):
+        """ Views the spell book. Very similar to viewing the inventory."""
+        x = -1
+        print('==============================')
+        print('Mana: {0}/{1}\n'.format(self.currentmana, self.maxmana))
+        if self.spellbook:
+            for i in self.spellbook:
+                x += 1
+                print('( ' + str(x) + ' ) Mana: [ ' + str(i.mana) + ' ] ' + i.name + ' - ' + i.description)
+        else:
+            print('Your spell book is empty! :(')
+        print('==============================')
+
     def use_item(self):
         """ Views the inventory, and then asks the player what item they would like to use. """
-        print('==============================')
-        x = -1
-        if self.inventory:  # Check to see if player's inventory contains an item.
-            for i in self.inventory:
-                x += 1
-                print('( ' + str(x) + ' ) ' + i.name + ' - ' + i.description())
-            else:
-                print('==============================')
-                while True:
-                    try:
-                        useitem = abs(int(input("\nWhat do you use? (# for item, anything else to go back.)\n")))
-                        if useitem <= x:
-                            self.inventory[useitem].use(self)
-                            break
-                        elif useitem > x:
-                            print('\nInvalid item number.')
-                    except ValueError:
+        self.view_inventory()
+        x = len(self.inventory)
+        while self.inventory:
+            try:
+                useitem = abs(int(input("\nWhat do you use? (# for item, anything else to go back.)\n")))
+                if useitem <= x and self.inventory[useitem].itemtype != 'equip':  # Trying to use equipment?
+                    self.inventory[useitem].activate(self)  # No? Good.
+                    break
+                elif useitem <= x and self.inventory[useitem].itemtype == 'equip':  # Trying to use equipment?
+                    print("\nYou can't use equipment! Try 'equip' command.")  # Yes? You can't do that!
+                elif useitem > x:
+                    print('\nInvalid item number.')
+            except ValueError:
+                break
+
+    def cast_spell(self):
+        self.view_spellbook()
+        x = len(self.spellbook)
+        while self.spellbook:
+            try:
+                usespell = abs(int(input("\nWhat spell do you cast? (# for item, anything else to go back.)\n")))
+                if usespell <= x:
+                    if combatenemy and self.spellbook[usespell].incombat == 1:  # Is spell combat only?
+                        e = combatenemy[0]  # We are in combat! Set the current enemy to a local variable.
+                        self.spellbook[usespell].activate_spell(self, e)  # and pass it to the spell's method.
                         break
+                    elif not combatenemy and self.spellbook[usespell].incombat == 1:  # Is spell combat only?
+                        print('Can only cast {0} in combat!'.format(self.spellbook[usespell].name))
+                    else:  # This is for spells that can be used both in and out of combat.
+                        self.spellbook[usespell].activate_spell(self)  # Spells that can be used in/out of combat.
+
+                elif usespell > x:
+                    print('\nInvalid spell number.')
+            except ValueError:
+                break
+
+    def equip_item(self):
+        """ Views the inventory, and then asks the player what item they would like to equip. """
+        self.view_inventory()
+        x = len(self.inventory)
+        while self.inventory:
+            try:
+                useitem = abs(int(input("\nWhat do you equip? (# for item, anything else to go back.)\n")))
+                if useitem <= x and self.inventory[useitem].itemtype == 'equip':  # Trying to equip consumable?
+                    self.inventory[useitem].activate(self)  # No? Good.
+                    break
+                elif useitem <= x and self.inventory[useitem].itemtype != 'equip':  # Trying equip consumable?
+                    print("\nYou can't equip that! Try 'use' command.")  # Yes? You can't do that!
+                elif useitem > x:
+                    print('\nInvalid item number.')
+            except ValueError:
+                break
         else:
             print('==============================')
             print('Your inventory is empty! :(')
@@ -133,6 +196,11 @@ class Character:
         """ Adds an item to the inventory. """
         self.inventory.append(item)
         print('--You acquired {0}!--\n'.format(item.name))
+
+    def add_spell(self, spell):
+        """ Adds a spell to the spell book. """
+        self.spellbook.append(spell)
+        print('--You learned {0}!--\n'.format(spell.name))
 
         #
         #
@@ -151,8 +219,6 @@ class Character:
             print("========================================")
             print("{0}: {1}/{2}".format(enemy.name, enemy.currenthp, enemy.maxhp))
             print("========================================")
-
-
 
     def flee(self, enemy):
         """ Attempt to flee. Utilizes Luck. """
@@ -202,19 +268,6 @@ def character_creation():
             print('Invalid input.\n')
     while True:
         try:
-            strength = abs(int(input("{0} points remaining.\nHow many points of Strength would you like?\n".format(attributes))))
-            if strength >= attributes:
-                print('You have attempted to assign too many points.\n')
-            elif strength == 0:
-                print('You cannot assign 0 points to Strength\n')
-            else:
-                attributes -= strength
-                print('You now have {0} Strength.\n'.format(strength))
-                break
-        except ValueError:
-            print('Invalid input.\n')
-    while True:
-        try:
             maxmana = abs(int(input("{0} points remaining.\nHow many points of Mana would you like?\n"
                                     .format(attributes))))
             if maxmana > attributes:
@@ -223,8 +276,8 @@ def character_creation():
                 attributes -= maxmana
                 luck = attributes
                 print('You now have {0} Mana.\n'
-                      'Remaining points have been converted into {1} Luck\n'.format(maxmana, luck, strength))
-                return number_of_players, name, maxhp, maxmana, luck, 0, strength
+                      'Remaining points have been converted into {1} Luck\n'.format(maxmana, luck))
+                return number_of_players, name, maxhp, maxmana, luck
         except ValueError:
             print('Invalid input.\n')
 
@@ -237,5 +290,28 @@ def character_creation():
 #
 
 
-player1 = Player(character_creation())  # Starts the game.
-player1.add_item(potion_lesser_healing_potion)  # Give the player a potion.
+# Starts the game.
+#player1 = Player(character_creation())
+
+
+# Give the player a potion.
+#player1.add_item(potion_lesser_healing_potion)
+
+
+# Giving the player a starter weapon.
+#player1.add_item(equip_broken_straight_sword)
+
+
+# Equipping the player with the starter weapon.
+#Item.activate(equip_broken_straight_sword, player1)
+
+
+# TESTING TESTING TESTING
+# Giving the player some gear for testing purposes. Play around with these and then remove them as needed.
+#player1.add_item(equip_silver_blade)
+#player1.add_item(equip_steel_helmet)
+#player1.add_item(potion_greater_rejuv_potion)
+#player1.add_item(equip_silver_chest)
+#player1.add_spell(spell_lesser_heal)
+#player1.add_spell(spell_greater_fireball)
+#player1.add_item(tome_greaterheal)

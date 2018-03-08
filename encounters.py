@@ -13,6 +13,8 @@ from itemClass import *
 # Throughout the combat function, you will see the variable 'e'
 # e is the randomly selected enemy object
 # In order to understand this a bit easier, imagine e = zombie
+
+
 def combat(player):
     combatRoll = random.randint(1, player.level)
     if combatRoll <= 10:
