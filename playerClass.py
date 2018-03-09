@@ -58,11 +58,9 @@ class Character:
 
     def update(self):
         """ Method used to check and player_update player status."""
-        if self.currentexp >= self.neededexp:  # Check to see if player has enough exp to level up.
-            self.lvlup()
+
         if self.currenthp <= 0:  # Check to see if player is dead.
             self.death()
-            combatenemy.remove(self)
         if self.currenthp > self.maxhp:  # Check if player has more HP than maximum
             self.currenthp = self.maxhp
         if self.currentmana > self.maxmana:  # Check if player has more Mana than maximum
@@ -71,33 +69,6 @@ class Character:
     def hurt(self, damage):
 
         self.currenthp -= damage
-
-    def lvlup(self):
-        """ Method used if player_update() detects enough experience to level up. """
-        self.currentexp -= self.neededexp
-        self.neededexp += 10
-        self.level += 1
-        print('-*-*-*You have gained a level!*-*-*-\n')
-        while True:
-            try:
-                spendpoint = input("Would you like to increase HP, Mana, or Luck?"
-                                   "('hp', 'mana', 'luck'.\n")
-                if spendpoint == 'hp':
-                    self.maxhp += 1
-                    print('You now have {0} HP!'.format(self.maxhp))
-                    break
-                elif spendpoint == 'mana':
-                    self.maxmana += 1
-                    print('You now have {0} Mana!'.format(self.maxmana))
-                    break
-                elif spendpoint == 'luck':
-                    self.luck += 1
-                    print('You now have {0} Luck!'.format(self.luck))
-                    break
-                elif spendpoint != 'hp' or 'mana' or 'luck':
-                    print('Invalid input.\n')
-            except ValueError:
-                print('Invalid Input\n')
 
     def view_inventory(self):
         """ Views the player's gold and inventory. """
@@ -144,8 +115,8 @@ class Character:
         #
     def combatTurn(self, e):
         self.attack(e)
+
     def attack(self, enemy):
-        enemy.update()
         if self.currenthp > 0:
             enemy.hurt(self.atk)
             if enemy.currenthp < 0:
@@ -157,6 +128,7 @@ class Character:
             print("{0}: {1}/{2}".format(enemy.name, enemy.currenthp, enemy.maxhp))
             print("========================================")
         enemy.update()
+
     def flee(self):
         """ Attempt to flee. Utilizes Luck. """
         print('{0} attempts to flee!'.format(self.name))
@@ -202,6 +174,38 @@ class Player(Character):
                           item_null,
                           item_null]
         self.spellbook = []  # Giving the player a spellbook
+
+    def lvlup(self):
+        """ Method used if player_update() detects enough experience to level up. """
+        self.currentexp -= self.neededexp
+        self.neededexp += 10
+        self.level += 1
+        print('-*-*-*You have gained a level!*-*-*-\n')
+        while True:
+            try:
+                spendpoint = input("Would you like to increase HP, Mana, or Luck?"
+                                   "('hp', 'mana', 'luck'.\n")
+                if spendpoint == 'hp':
+                    self.maxhp += 1
+                    print('You now have {0} HP!'.format(self.maxhp))
+                    break
+                elif spendpoint == 'mana':
+                    self.maxmana += 1
+                    print('You now have {0} Mana!'.format(self.maxmana))
+                    break
+                elif spendpoint == 'luck':
+                    self.luck += 1
+                    print('You now have {0} Luck!'.format(self.luck))
+                    break
+                elif spendpoint != 'hp' or 'mana' or 'luck':
+                    print('Invalid input.\n')
+            except ValueError:
+                print('Invalid Input\n')
+
+    def update(self):
+        super(Player, self).update()
+        if self.currentexp >= self.neededexp:  # Check to see if player has enough exp to level up.
+            self.lvlup()
     def combatTurn(self, e):
 
         usedTurn = False

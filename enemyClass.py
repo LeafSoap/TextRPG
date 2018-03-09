@@ -5,19 +5,18 @@ from itemClass import *
 
 
 class AI(Character):
-    def death(self, opponent):
-        combatenemy.remove(self)  # Removes the enemy from the combatenemy list.
-        self.currenthp = self.maxhp  # Brings the enemy object back up to full hp so it can be used later.
-        opponent.currentexp += self.level  # Gives the player exp.
-        opponent.gold += self.gold  # Gives the player gold.
+    def death(self):
+        self.currenthp = self.maxhp
+        combatenemy.clear()  # Removes the enemy from the combatenemy list.
         print('\n**** You have defeated {0}! You gain {1} experience and {2} gold! ***\n'
               .format(self.name, self.level, self.gold))
 
     def combatTurn(self, e):
-        if self.currenthp <= e.atk:
-            self.flee()
-        else:
-            self.attack(e)
+        if self.currenthp > 0:
+            if self.currenthp <= e.atk:
+                self.flee()
+            else:
+                self.attack(e)
 
 class Humanoid(AI):
     def __init__(self):
@@ -29,8 +28,7 @@ class Humanoid(AI):
         self.equipment.append(equip_broken_straight_sword)
         self.inventory.append(potion_lesser_healing_potion)
     def update(self):
-        if self.currenthp > self.maxhp:
-            self.currenthp = self.maxhp
+        super(Humanoid, self).update()
         self.armor = 0
         self.atk = 0
         for i in self.equipment:
@@ -42,22 +40,25 @@ class Humanoid(AI):
                 self.armor = i.value
             elif i.itemsubtype == "weapon":
                 self.atk = i.value
+
     def combatTurn(self, e):
-        usedTurn = False
-        if self.currenthp <= e.atk:
-            self.flee()
-            usedTurn = True
-        elif self.currenthp <= (self.maxhp/2):
-            x = -1
-            for i in self.inventory:
-                x += 1
-                if i.itemtype == "potion":
-                    if self.currenthp <= (self.maxhp - i.value):
-                        self.inventory[x].activate(self)
-                        usedTurn = True
-        if usedTurn == False:
-            self.attack(e)
+        if self.currenthp > 0:
+            usedTurn = False
+            if self.currenthp <= e.atk:
+                self.flee()
+                usedTurn = True
+            elif self.currenthp <= (self.maxhp/2):
+                x = -1
+                for i in self.inventory:
+                    x += 1
+                    if i.itemtype == "potion":
+                        if self.currenthp <= (self.maxhp - i.value):
+                            self.inventory[x].activate(self)
+                            usedTurn = True
+            if usedTurn == False:
+                self.attack(e)
         self.update()
+        e.update()
 
 
 class Knight(Humanoid):
@@ -84,32 +85,35 @@ class spellCaster(Humanoid):
         self.spellbook.append(spell_lesser_fireball)
 
     def combatTurn(self, e):
-        usedTurn = False
-        if self.currenthp <= e.atk:
-            self.flee()
-            usedTurn = True
-        elif self.currenthp <= (self.maxhp/2):
-            x = -1
-            for i in self.inventory:
-                x += 1
-                if i.itemtype == "potion":
-                    if self.currenthp < self.maxhp:
-                        self.inventory[x].activate(self)
-                        usedTurn = True
-        if usedTurn == False:
-            for i in self.spellbook:
+        if self.currenthp > 0:
+            usedTurn = False
+            if self.currenthp <= e.atk:
+                self.flee()
+                usedTurn = True
+            elif self.currenthp <= (self.maxhp/2):
                 x = -1
-                if i.mana < self.currentmana:
-                    x+=1
-                    self.cast_spell(x, e)
-                    usedTurn = True
-        if usedTurn == False:
-            self.attack(e)
+                for i in self.inventory:
+                    x += 1
+                    if i.itemtype == "potion":
+                        if self.currenthp < self.maxhp:
+                            self.inventory[x].activate(self)
+                            usedTurn = True
+            if usedTurn == False:
+                for i in self.spellbook:
+                    x = -1
+                    if i.mana < self.currentmana:
+                        x+=1
+                        self.cast_spell(x, e)
+                        usedTurn = True
+            if usedTurn == False:
+                self.attack(e)
+        self.update()
+        e.update()
 
 class Wizard(spellCaster):
     def __init__(self):
         super(spellCaster, self).__init__()
-        self.name = "Magician"
+        self.name = "Wizard"
         self.maxhp = 15
         self.currenthp = self.maxhp
         self.maxmana = 10
@@ -122,7 +126,7 @@ class Wizard(spellCaster):
 class mirrorMatch(Wizard):
     def __init__(self, player):
         super(mirrorMatch, self).__init__()
-        self.name = player.name
+        self.name = "Shadow " + str(player.name)
         self.maxhp = player.maxhp
         self.currenthp = self.maxhp
         self.maxmana = player.maxmana
@@ -203,8 +207,8 @@ tier1gold = random.randint(10, 20)
 
 
 def combat(player):
-    combatRoll = random.randint(1, player.level)
-    if combatRoll == 1:
+    combatRoll = random.randrange(1, player.level + 11)
+    if combatRoll < 2:
         e = mirrorMatch(player)
     if combatRoll <= 10:
         e = random.choice(tier1enemy)  # Choose a random enemy from a tier based on player level
@@ -214,9 +218,10 @@ def combat(player):
     print('You have encountered a {0}!'.format(e.name))
     e.view_stats()
     e.update()
-    while e.currenthp > 0:
+    while combatenemy:
         player.combatTurn(e)
-        e.combatTurn(player)
+        if e in combatenemy:
+            e.combatTurn(player)
 combat_commands = {
     'stats': 'View your current stats.',
     'inven': 'View your current inventory and gold.',
