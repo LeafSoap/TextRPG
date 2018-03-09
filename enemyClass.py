@@ -1,5 +1,6 @@
 import random
 from playerClass import *
+from itemClass import *
 
 
 class AI(Character):
@@ -18,8 +19,39 @@ class AI(Character):
         print('\n**** You have defeated {0}! You gain {1} experience and {2} gold! ***\n'
               .format(self.name, self.level, self.gold))
 
+class Humanoid(AI):
+    def __init__(self):
+        super(Humanoid, self).__init__()
+        self.name = "Peasant"
+        self.maxhp = 10
+        self.currenthp = self.maxhp
+        self.currentmana = self.maxmana
+        self.equipment.append(equip_broken_straight_sword)
+        self.inventory.append(potion_lesser_healing_potion)
+    def update(self):
+        super()
+        if self.currenthp < self.maxhp:
 
-class Beast(AI):
+            x = -1
+            for i in self.inventory:
+                x += 1
+                if i.itemtype == "potion":
+                    if self.currenthp < self.maxhp:
+                        self.inventory[x].activate(self)
+
+
+class Rat(AI):
+
+    def __init__(self):
+        super(Rat, self).__init__()
+        self.hasAI = True
+        self.name = "Giant Rat"
+        self.maxhp = 10
+        self.currenthp = self.maxhp
+        self.maxmana = 10
+        self.luck = 1
+        self.strength = 4
+
     def attack(self, enemy):
         if self.currenthp > 0:
             combatroll = random.randint(1, 100)
@@ -45,7 +77,7 @@ class Beast(AI):
             print("========================================")
 
 
-combatenemy = []
+
 
 #
 #
@@ -54,12 +86,6 @@ combatenemy = []
 #
 
 
-enemy_rat = Beast([-1, 'Giant Rat', 15, 0, 2, 10, 2])
-enemy_ghoul = AI([-1, 'Ghoul', 9, 2, 1, 15, 3])
-enemy_livingmushroom = AI([-1, 'Living Mushroom', 5, 4, 5, 20, 2])
-enemy_beast = Beast([-1, "Humanoid Beast", 15, 5, 2, random.randint(15, 25), 4])
-enemy_zombie = AI([-1, "Zombified Peasant", 50, 0, 0, random.randint(15, 25), 1])
-enemy_wolf = Beast([-1, "Direwolf", 8, 5, 5, 5, 8])
 
 
 # Identifier, name, maxHP, maxMana, luck, gold, strength
@@ -68,12 +94,8 @@ enemy_wolf = Beast([-1, "Direwolf", 8, 5, 5, 5, 8])
 # Adding enemies to tier lists
 #
 #
-tier1enemy = (enemy_rat,
-              enemy_ghoul,
-              enemy_livingmushroom)
-tier2enemy = (enemy_beast,
-              enemy_zombie,
-              enemy_wolf)
+tier1enemy = (Humanoid(), Humanoid())
+tier2enemy = ()
 tier1gold = random.randint(10, 20)
 
 
@@ -121,7 +143,7 @@ def combat(player):
             if combatenemy:  # Check to see if enemy is still alive, because successfully fleeing 'kills' enemy.
                 e.attack(player)  # If fleeing is unsuccessful, the enemy attacks the player.
         player.update()  # Updates the player every loop
-        e.update(player)  # Updates the enemy every loop for good measure. May be useless.
+        e.update()  # Updates the enemy every loop for good measure. May be useless.
 
 combat_commands = {
     'stats': 'View your current stats.',
