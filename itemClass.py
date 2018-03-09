@@ -164,6 +164,7 @@ tier3potion = (potion_greater_healing_potion,
 # item_object = Item('itemtype', 'itemsubtype', 'name', atk/armor, gold
 #
 
+npc_wand = Item('equip', 'weapon', 'wand', 1, 1)
 equip_broken_straight_sword = Item('equip', 'weapon', 'Broken Straight Sword', 3, 30)
 equip_steel_sword = Item('equip', 'weapon', 'Steel sword', 5, 60)
 equip_silver_blade = Item('equip', 'weapon', 'Silver Blade', 8, 120)
