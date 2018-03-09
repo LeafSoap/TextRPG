@@ -70,23 +70,22 @@ start_game()  # This starts the game.
 
 
 while player1:
-    Player.update(player1)
     maincommand = input("\nWhat would you like to do next? ('help' for commands)\n")
     if maincommand == 'help':
         for key in main_commands:
             print(str(key) + ": " + str(main_commands[key]))
     elif maincommand == 'stats':
-        Player.view_stats(player1)
+        player1.view_stats()
     elif maincommand == 'inven':
-        Player.view_inventory(player1)
+        player1.view_inventory()
     elif maincommand == 'use':
-        Player.use_item(player1)
+        player1.use_item()
     elif maincommand == 'book':
-        Player.view_spellbook(player1)
+        player1.view_spellbook()
     elif maincommand == 'cast':
         player1.cast_spell()
     elif maincommand == 'equip':
-        Player.equip_item(player1)
+        player1.equip_item()
     elif maincommand == 'explore':
         x = random.randint(1, 1)
         if x == 1:

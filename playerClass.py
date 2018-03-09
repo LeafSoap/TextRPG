@@ -57,19 +57,19 @@ class Character:
         print('==========')
 
     def update(self):
-
-
         """ Method used to check and player_update player status."""
         if self.currentexp >= self.neededexp:  # Check to see if player has enough exp to level up.
             self.lvlup()
         if self.currenthp <= 0:  # Check to see if player is dead.
             self.death()
+            combatenemy.remove(self)
         if self.currenthp > self.maxhp:  # Check if player has more HP than maximum
             self.currenthp = self.maxhp
         if self.currentmana > self.maxmana:  # Check if player has more Mana than maximum
             self.currentmana = self.maxmana
 
     def hurt(self, damage):
+
         self.currenthp -= damage
 
     def lvlup(self):
@@ -124,8 +124,8 @@ class Character:
     def use_item(self, item):
         self.item.activate()
 
-    def cast_spell(self, spell):
-        self.spellbook[spell].activate_spell()
+    def cast_spell(self, spell, e):
+        self.spellbook[spell].activate_spell(self,e)
 
     def add_item(self, item):
         """ Adds an item to the inventory. """
@@ -144,9 +144,8 @@ class Character:
         #
     def combatTurn(self, e):
         self.attack(e)
-        e.update()
-        self.update()
     def attack(self, enemy):
+        enemy.update()
         if self.currenthp > 0:
             enemy.hurt(self.atk)
             if enemy.currenthp < 0:
@@ -157,14 +156,14 @@ class Character:
             print("========================================")
             print("{0}: {1}/{2}".format(enemy.name, enemy.currenthp, enemy.maxhp))
             print("========================================")
-
-    def flee(self, enemy):
+        enemy.update()
+    def flee(self):
         """ Attempt to flee. Utilizes Luck. """
         print('{0} attempts to flee!'.format(self.name))
         x = random.randint(0, 20)
         if self.luck >= x:
-            print('\n{0} has successfully ran away from {1}!'
-                  .format(self.name, enemy.name))  # Player does not get exp or gold if fleeing is successful.
+            print('\n{0} has successfully ran away!'
+                  .format(self.name))  # Player does not get exp or gold if fleeing is successful.
             for i in combatenemy:
                 combatenemy.remove(i)
         # Clears the enemy list, this will have to be handled differently with multiple enemies and players"""
@@ -186,8 +185,6 @@ class Player(Character):
         self.currentmana = self.maxmana
         # Experience/Level attributes:
         self.level = self.maxhp + self.maxmana + self.luck - 24
-        self.neededexp = 15
-        self.currentexp = 0
         # Inventory/Gold attributes:
         self.inventory = []
         self.gold = 0
@@ -219,7 +216,6 @@ class Player(Character):
                 self.view_inventory()
             elif combatcommand == 'use':  # ---Use item command
                 self.use_item()
-                usedTurn = True
             elif combatcommand == 'enemy':  # ---View enemy stats command
                 e.view_stats()
             elif combatcommand == 'cast':
@@ -255,6 +251,27 @@ class Player(Character):
                     print('\nInvalid item number.')
             except ValueError:
                 break
+
+    def equip_item(self):
+        """ Views the inventory, and then asks the player what item they would like to equip. """
+        self.view_inventory()
+        x = len(self.inventory)
+        while self.inventory:
+            try:
+                useitem = abs(int(input("\nWhat do you equip? (# for item, anything else to go back.)\n")))
+                if useitem <= x and self.inventory[useitem].itemtype == 'equip':  # Trying to equip consumable?
+                    self.inventory[useitem].activate(self)  # No? Good.
+                    break
+                elif useitem <= x and self.inventory[useitem].itemtype != 'equip':  # Trying equip consumable?
+                    print("\nYou can't equip that! Try 'use' command.")  # Yes? You can't do that!
+                elif useitem > x:
+                    print('\nInvalid item number.')
+            except ValueError:
+                break
+        else:
+            print('==============================')
+            print('Your inventory is empty! :(')
+            print('==============================')
 
     def cast_spell(self):
         self.view_spellbook()
