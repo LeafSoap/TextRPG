@@ -84,7 +84,7 @@ while player1:
     elif maincommand == 'book':
         Player.view_spellbook(player1)
     elif maincommand == 'cast':
-        Player.cast_spell(player1)
+        player1.cast_spell()
     elif maincommand == 'equip':
         Player.equip_item(player1)
     elif maincommand == 'explore':

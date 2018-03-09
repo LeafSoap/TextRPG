@@ -57,6 +57,8 @@ class Character:
         print('==========')
 
     def update(self):
+
+
         """ Method used to check and player_update player status."""
         if self.currentexp >= self.neededexp:  # Check to see if player has enough exp to level up.
             self.lvlup()
@@ -66,6 +68,9 @@ class Character:
             self.currenthp = self.maxhp
         if self.currentmana > self.maxmana:  # Check if player has more Mana than maximum
             self.currentmana = self.maxmana
+
+    def hurt(self, damage):
+        self.currenthp -= damage
 
     def lvlup(self):
         """ Method used if player_update() detects enough experience to level up. """
@@ -137,10 +142,13 @@ class Character:
         # Combat methods
         #
         #
-
+    def combatTurn(self, e):
+        self.attack(e)
+        e.update()
+        self.update()
     def attack(self, enemy):
         if self.currenthp > 0:
-            enemy.currenthp -= self.atk
+            enemy.hurt(self.atk)
             if enemy.currenthp < 0:
                 enemy.currenthp = 0
             print(str('&&& {0} attacked {1} for {2} points of damage! &&&'
@@ -197,7 +205,32 @@ class Player(Character):
                           item_null,
                           item_null]
         self.spellbook = []  # Giving the player a spellbook
+    def combatTurn(self, e):
 
+        usedTurn = False
+        while usedTurn == False:
+            combatcommand = input("\nYou are in combat! ('help' for commands)\n")
+            if combatcommand == 'help':  # Help command
+                for key in combat_commands:  # 'key' throws a weak warning. Ignore it for now. Works fine.
+                    print(str(key) + ": " + str(combat_commands[key]))
+            elif combatcommand == 'stats':  # ---Stats command
+                self.view_stats()
+            elif combatcommand == 'inven':  # ---Inventory command
+                self.view_inventory()
+            elif combatcommand == 'use':  # ---Use item command
+                self.use_item()
+                usedTurn = True
+            elif combatcommand == 'enemy':  # ---View enemy stats command
+                e.view_stats()
+            elif combatcommand == 'cast':
+                self.cast_spell()
+                usedTurn = True
+            elif combatcommand == 'attack':  # ---Attack command
+                self.attack(e)
+                usedTurn = True
+            elif combatcommand == 'flee':  # ---Flee command
+                self.flee(self, e)
+                usedTurn = True
     def death(self):
         """ Method used if player_update() detects that the player's HP has reached 0. """
         points = self.level

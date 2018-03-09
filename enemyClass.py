@@ -4,12 +4,11 @@ from itemClass import *
 
 
 class AI(Character):
-    def update(self, opponent):
-        """ Similar to Player.update(). """
-        if self.currenthp <= 0:  # Checks to see if the enemy is dead.
-            self.death(opponent)
+    def update(self):
+        if self.currenthp <= 0:
+            self.death()
         if self.currenthp <= 5:
-            self.flee(opponent)
+            self.flee()
 
     def death(self, opponent):
         combatenemy.remove(self)  # Removes the enemy from the combatenemy list.
@@ -29,15 +28,40 @@ class Humanoid(AI):
         self.equipment.append(equip_broken_straight_sword)
         self.inventory.append(potion_lesser_healing_potion)
     def update(self):
-        super()
+        self.armor = 0
+        self.atk = 0
+        for i in self.equipment:
+            if i.itemsubtype == "chest":
+                self.armor = i.value
+            elif i.itemsubtype == "legs":
+                self.armor = i.value
+            elif i.itemsubtype == "head":
+                self.armor = i.value
+            elif i.itemsubtype == "weapon":
+                self.atk = i.value
+    def combatTurn(self, e):
+        usedTurn = False
         if self.currenthp < self.maxhp:
-
             x = -1
             for i in self.inventory:
                 x += 1
                 if i.itemtype == "potion":
                     if self.currenthp < self.maxhp:
                         self.inventory[x].activate(self)
+                        usedTurn = True
+        if usedTurn == False:
+            self.attack(e)
+
+class spellCaster(Humanoid):
+    class Humanoid(AI):
+        def __init__(self):
+            super(spellCaster, self).__init__()
+            self.name = "Evil Wizard"
+            self.maxhp = 15
+            self.currenthp = self.maxhp
+            self.currentmana = self.maxmana
+            self.inventory.append(potion_lesser_healing_potion)
+            self.inventory.append(potion_lesser_healing_potion)
 
 
 class Rat(AI):
@@ -94,7 +118,7 @@ class Rat(AI):
 # Adding enemies to tier lists
 #
 #
-tier1enemy = (Humanoid(), Humanoid())
+tier1enemy = (Humanoid(), spellCaster())
 tier2enemy = ()
 tier1gold = random.randint(10, 20)
 
@@ -119,32 +143,9 @@ def combat(player):
     combatenemy.append(e)  # Add the random enemy to the combatenemy list.
     print('You have encountered a {0}!'.format(e.name))
     e.view_stats()
-    while combatenemy:
-        combatcommand = input("\nYou are in combat! ('help' for commands)\n")
-        if combatcommand == 'help':  # Help command
-            for key in combat_commands:  # 'key' throws a weak warning. Ignore it for now. Works fine.
-                print(str(key) + ": " + str(combat_commands[key]))
-        elif combatcommand == 'stats':  # ---Stats command
-            player.view_stats()
-        elif combatcommand == 'inven':  # ---Inventory command
-            player.view_inventory()
-        elif combatcommand == 'use':  # ---Use item command
-            player.use_item()
-            if combatenemy:  # If the enemy is still alive....
-                e.attack(player)  # The enemy attacks after the player uses an item.
-        elif combatcommand == 'enemy':  # ---View enemy stats command
-            e.view_stats()
-        elif combatcommand == 'attack':  # ---Attack command
-            player.attack(e)
-            if combatenemy:  # If the enemy is still alive...
-                e.attack(player)  # The enemy counterattacks the player.
-        elif combatcommand == 'flee':  # ---Flee command
-            Player.flee(player, e)
-            if combatenemy:  # Check to see if enemy is still alive, because successfully fleeing 'kills' enemy.
-                e.attack(player)  # If fleeing is unsuccessful, the enemy attacks the player.
-        player.update()  # Updates the player every loop
-        e.update()  # Updates the enemy every loop for good measure. May be useless.
-
+    while e.currenthp > 0:
+        player.combatTurn(e)
+        e.combatTurn(player)
 combat_commands = {
     'stats': 'View your current stats.',
     'inven': 'View your current inventory and gold.',
