@@ -40,7 +40,7 @@ class Item:
             player.inventory.remove(self)  # Remove the potion from inventory.
             if self.itemsubtype == 'hppot':  # Checks to see if the item is a healing potion.
                 player.currenthp += self.value
-                print('You drank a {0}.'.format(self.name))
+                print('{0} drank a {1}.'.format(player.name, self.name))
                 player.update()
             elif self.itemsubtype == 'manapot':  # Checks to see if the item is a mana potion.
                 player.currentmana += self.value
