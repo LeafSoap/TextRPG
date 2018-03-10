@@ -147,16 +147,18 @@ class Player(Character):
         # Attributes from character creation:
         # Each player object will have their own unique 'identifier' attribute. This identifier will be 1 for Player 1,
         # 2 for Player 2, etc. This will allow easier multi-player support.
+        self.level = 1
         self.identifier = creation[0]
         self.name = creation[1]
         self.maxhp = creation[2]
         self.maxmana = creation[3]
         self.luck = creation[4]
+        self.currentexp = 0
+        self.neededexp = self.level*40
         # Attributes generated using the ones above:
         self.currenthp = self.maxhp
         self.currentmana = self.maxmana
         # Experience/Level attributes:
-        self.level = self.maxhp + self.maxmana + self.luck - 24
         # Inventory/Gold attributes:
         self.inventory = []
         self.gold = 0
@@ -204,6 +206,8 @@ class Player(Character):
 
     def update(self):
         super(Player, self).update()
+        if self.currenthp <= 0:
+            self.death()
         if self.currentexp >= self.neededexp:  # Check to see if player has enough exp to level up.
             self.lvlup()
     def combatTurn(self, e):

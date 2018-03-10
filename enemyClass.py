@@ -7,9 +7,9 @@ from itemClass import *
 class AI(Character):
     def death(self):
         self.currenthp = self.maxhp
+        self.currentmana = self.maxmana
         combatenemy.clear()  # Removes the enemy from the combatenemy list.
-        print('\n**** You have defeated {0}! You gain {1} experience and {2} gold! ***\n'
-              .format(self.name, self.level, self.gold))
+        print('\n**** {0} died! ***\n'.format(self.name))
 
     def combatTurn(self, e):
         if self.currenthp > 0:
@@ -171,7 +171,7 @@ class Rat(AI):
             print("========================================")
             print("{0}: {1}/{2}".format(enemy.name, enemy.currenthp, enemy.maxhp))
             print("========================================")
-
+        enemy.update()
 
 class Bear(Rat):
     def __init__(self):
@@ -192,7 +192,7 @@ class Bear(Rat):
 #
 tier1enemy = (Rat(), Humanoid(), spellCaster())
 tier2enemy = (Knight(), Wizard(), Bear())
-tier1gold = random.randint(10, 20)
+
 
 
 #
@@ -212,8 +212,12 @@ def combat(player):
         e = mirrorMatch(player)
     if combatRoll <= 10:
         e = random.choice(tier1enemy)  # Choose a random enemy from a tier based on player level
+        loot = random.randrange(10, 20)
+        exp = random.randrange(15, 20)
     elif combatRoll <= 25:
         e = random.choice(tier2enemy)
+        loot = random.randrange(20, 50)
+        exp = random.randrange(40, 50)
     combatenemy.append(e)  # Add the random enemy to the combatenemy list.
     print('You have encountered a {0}!'.format(e.name))
     e.view_stats()
@@ -222,6 +226,9 @@ def combat(player):
         player.combatTurn(e)
         if e in combatenemy:
             e.combatTurn(player)
+    player.gold += loot
+    player.currentexp += exp
+    print("{0} gains {1} gold and {2} experience!".format(player.name, loot, exp))
 combat_commands = {
     'stats': 'View your current stats.',
     'inven': 'View your current inventory and gold.',
